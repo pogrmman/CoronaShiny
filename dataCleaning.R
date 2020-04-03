@@ -113,3 +113,11 @@ getFIPS <- (function() {
     return(result)
   })
 })()
+
+# Get list of all counties
+getAllCounties <- function(covidData) {
+  result <- covidData %>% group_by(County_FIPS, State_FIPS) %>%
+    select(County, Province_State, County_FIPS, State_FIPS) %>%
+    unique() %>% ungroup()
+  return(result)
+}
