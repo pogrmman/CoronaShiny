@@ -17,6 +17,7 @@ library(dplyr)
 library(httr)
 library(jsonlite)
 library(stringr)
+library(readr)
 
 ### Functions ###
 # List available data
@@ -48,3 +49,25 @@ initialFetch <- function() {
   covidData <- fetch(availableData, pattern)
   return(covidData)
 }
+
+# Fetch applicable census data
+# Requires a census API key stored as a single line in "Data/.censusAPIKey"
+getCensusData <- (function() {
+  key <- read_file("Data/.censusAPIKey")
+  return( function(countyFIPS, stateFIPS) {
+    url <- paste("http://api.census.gov/data/2019/pep/",
+                 "population?get=NAME,STATE,DATE_DESC,DENSITY,POP&",
+                 "for=county:",
+                 countyFIPS,
+                 "&in=state:",
+                 stateFIPS,
+                 "&key=",
+                 key,
+                sep = "")
+    request <- GET(url)
+    json <- content(request, as ="text")
+    validate(json)
+    json <- fromJSON(json)
+    return(json)
+  })
+})()
