@@ -77,5 +77,12 @@ getCensusData <- (function() {
 
 # Get density and population for each county
 getPopDensity <- function(countyList) {
-  
+  popInfo <- countyList %>% filter(!is.na(County_FIPS)) %>%
+    group_by(State_FIPS) %>%
+    do(getCensusData(.$County_FIPS, max(.$State_FIPS))) %>%
+    ungroup() %>% select(-State_FIPS) %>%
+    rename(State_FIPS = "state",
+           County_FIPS = "county")
+  countyList <- countyList %>% merge(popInfo)
+  return(countyList)
 }
