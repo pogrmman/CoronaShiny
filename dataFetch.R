@@ -54,7 +54,7 @@ initialFetch <- function() {
 # Requires a census API key stored as a single line in "Data/.censusAPIKey"
 getCensusData <- (function() {
   key <- read_file("Data/.censusAPIKey")
-  return( function(countyFIPS, stateFIPS) {
+  return(function(countyFIPS, stateFIPS) {
     url <- paste("http://api.census.gov/data/2019/pep/",
                  "population?get=NAME,STATE,DATE_DESC,DENSITY,POP&",
                  "for=county:",
