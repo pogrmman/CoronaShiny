@@ -55,10 +55,10 @@ initialFetch <- function() {
 getCensusData <- (function() {
   key <- read_file("Data/.censusAPIKey")
   return(function(countyFIPS, stateFIPS) {
-    url <- paste("http://api.census.gov/data/2019/pep/",
-                 "population?get=NAME,STATE,DATE_DESC,DENSITY,POP&",
+    url <- paste("https://api.census.gov/data/2019/pep/",
+                 "population?get=DENSITY,POP&",
                  "for=county:",
-                 countyFIPS,
+                 paste(countyFIPS, collapse = ","),
                  "&in=state:",
                  stateFIPS,
                  "&key=",
@@ -68,6 +68,14 @@ getCensusData <- (function() {
     json <- content(request, as ="text")
     validate(json)
     json <- fromJSON(json)
+    json <- as.data.frame(json)
+    colnames(json) <- as.character(unlist(json[1,]))
+    json <- tail(json, -1)
     return(json)
   })
 })()
+
+# Get density and population for each county
+getPopDensity <- function(countyList) {
+  
+}
