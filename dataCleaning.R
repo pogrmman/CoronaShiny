@@ -118,6 +118,6 @@ getFIPS <- (function() {
 getAllCounties <- function(covidData) {
   result <- covidData %>% group_by(County_FIPS, State_FIPS) %>%
     select(County, Province_State, County_FIPS, State_FIPS) %>%
-    unique() %>% ungroup()
+    unique() %>% ungroup() %>% filter(!is.na(County_FIPS))
   return(result)
 }
