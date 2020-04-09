@@ -101,7 +101,7 @@ getNewPostMar22 <- function(dateList) {
   # Build pattern from dateList
   pattern <- paste("(", dateList$Date, ")", sep = "", collapse = "|")
   # Filter ones that match dateList
-  availableData <- availableData %>% filter(download_url != pattern)
+  availableData <- availableData %>% filter(!str_detect(name, pattern))
   covidData <- fetch(availableData, patternPostMar22)
   return(covidData)
 }
