@@ -22,30 +22,6 @@ cleanDataPostMar22 <- function(covidData) {
   # Load in state FIPS codes
   stateFIPS <- read.csv("Data/StateFIPS.csv", colClasses = c("FIPS" = "character"))
   
-  # Initial Cleaning
-  covidData <- covidData %>%
-    # Merge FIPS columns
-    mutate(FIPS = as.character(FIPS), ï..FIPS = as.character(ï..FIPS)) %>%
-    unite(FIPS, ï..FIPS, FIPS, na.rm=TRUE) %>%
-    # Make FIPS code include all 5 digits
-    mutate(FIPS = as.character(FIPS)) %>%
-    mutate(FIPS = ifelse(str_length(FIPS) != 5, paste("0", FIPS, sep = ""), FIPS)) %>%
-    # Separate FIPS into state and county
-    mutate(County_FIPS = substr(FIPS, 3, 5)) %>%
-    mutate(State_FIPS = substr(FIPS, 1, 2)) %>%
-    select(-FIPS) %>%
-    # Fix state FIPS codes
-    merge(stateFIPS, by.x = "Province_State", by.y = "State") %>%
-    mutate(State_FIPS = ifelse(State_FIPS != FIPS, FIPS, State_FIPS)) %>%
-    select(-FIPS) %>%
-    # Set unknown counties to NA
-    mutate(County_FIPS = ifelse(County_FIPS == "", NA, County_FIPS)) %>%
-    # Get dates
-    select(-Last_Update) %>%
-    mutate(Date = substr(Filename, nchar(Filename) - 13, nchar(Filename) - 4)) %>%
-    select(-Filename) %>%
-    mutate(Date = as.Date(Date, "%m-%d-%y"))
-  
   # Filter out non-US
   covidData <- covidData %>% filter(Country_Region == "US") %>%
     # Rename Admin2 to County, Lat to Latitude, Long_ to Longitude
@@ -62,6 +38,33 @@ cleanDataPostMar22 <- function(covidData) {
     filter(Province_State != "Wuhan Evacuee") %>%
     # Filter out territories (Census API has no info on them)
     filter(County != "")
+  
+  # Initial Cleaning
+  if ("ï..FIPS" %in% colnames(covidData)) {
+    covidData <- covidData %>%
+      # Merge FIPS columns
+      mutate(FIPS = as.character(FIPS), ï..FIPS = as.character(ï..FIPS)) %>%
+      unite(FIPS, ï..FIPS, FIPS, na.rm=TRUE)
+  }
+  covidData <- covidData %>%
+     # Make FIPS code include all 5 digits
+      mutate(FIPS = as.character(FIPS)) %>%
+      mutate(FIPS = ifelse(str_length(FIPS) != 5, paste("0", FIPS, sep = ""), FIPS)) %>%
+      # Separate FIPS into state and county
+      mutate(County_FIPS = substr(FIPS, 3, 5)) %>%
+      mutate(State_FIPS = substr(FIPS, 1, 2)) %>%
+      select(-FIPS) %>%
+      # Fix state FIPS codes
+      merge(stateFIPS, by.x = "Province_State", by.y = "State") %>%
+      mutate(State_FIPS = ifelse((State_FIPS != FIPS)|is.na(State_FIPS), FIPS, State_FIPS)) %>%
+      select(-FIPS) %>%
+      # Set unknown counties to NA
+      mutate(County_FIPS = ifelse(County_FIPS == "", NA, County_FIPS)) %>%
+      # Get dates
+      select(-Last_Update) %>%
+      mutate(Date = substr(Filename, nchar(Filename) - 13, nchar(Filename) - 4)) %>%
+      select(-Filename) %>%
+      mutate(Date = as.Date(Date, "%m-%d-%y"))
   
   # Fix missing FIPS codes
   missing <- covidData %>% filter(is.na(County_FIPS)) %>%
@@ -101,7 +104,7 @@ getFIPS <- (function() {
 
 # Get list of all dates
 getDates <- function(covidData) {
-  dateList <- covidData %>% select(Date) %>% unique()
+  dateList <- covidData %>% select(Date) %>% unique() %>%
     mutate(Date = as.character.Date(Date, "%m-%d-%Y"))
   return(dateList)
 }
