@@ -21,16 +21,21 @@ source("./dataFetch.R", encoding = "UTF-8")
 source("./dataCleaning.R", encoding = "UTF-8")
 
 ### Functions ###
+# Cleaning pipeline
+processData <- function(covidData) {
+  covidData <- covidData %>% cleanDataPostMar22()
+  counties <- getAllCounties(covidData) %>% getPopDensity()
+  covidData <- covidData %>% merge(counties)
+  return(covidData)
+}
+
+# Fetch new data and merge with old
 getNewData <- function(covidData) {
   dateList <- getDates(covidData)
-  newData <- getNewPostMar22(dateList) %>% cleanDataPostMar22()
-  counties <- getAllCounties(newData) %>% getPopDensity()
-  newData <- newData %>% merge(counties)
+  newData <- getNewPostMar22(dateList) %>% processData()
   covidData <- covidData %>% bind_rows(newData)
   return(covidData)
 }
 
 ### Data Flow ###
-covidData <- initialFetch() %>% cleanDataPostMar22()
-counties <- getAllCounties(covidData) %>% getPopDensity()
-covidData <- covidData %>% merge(counties)
+covidData <- initialFetch() %>% processData()
