@@ -19,6 +19,12 @@ library(jsonlite)
 library(stringr)
 library(readr)
 
+### Pattern ###
+patternPostMar22 <- paste("(03-2[2-9]-2020.csv)|",
+                          "(03-3[0-1]-2020.csv)|",
+                          "(0[4-9]-[0-3][0-9]-2020.csv)|",
+                          "(1[0-2]-[0-3][0-9]-2020.csv)|",
+                          "([0-1][0-9]-[0-3][0-9]-202[1-9].csv)", sep = "")
 ### Functions ###
 # List available data
 listAvailable <- function() {
@@ -48,12 +54,7 @@ read.csv.withFilename <- function(filename) {
 # Fetch all data from 3/22/20 forward
 initialFetch <- function() {
   availableData <- listAvailable()
-  pattern <- paste("(03-2[2-9]-2020.csv)|",
-                   "(03-3[0-1]-2020.csv)|",
-                   "(0[4-9]-[0-3][0-9]-2020.csv)|",
-                   "(1[0-2]-[0-3][0-9]-2020.csv)|",
-                   "([0-1][0-9]-[0-3][0-9]-202[1-9].csv)", sep = "")
-  covidData <- fetch(availableData, pattern)
+  covidData <- fetch(availableData, patternPostMar22)
   return(covidData)
 }
 
@@ -92,4 +93,15 @@ getPopDensity <- function(countyList) {
            County_FIPS = "county")
   countyList <- countyList %>% merge(popInfo)
   return(countyList)
+}
+
+# Fetch new data
+getNewPostMar22 <- function(dateList) {
+  availableData <- listAvailable()
+  # Build pattern from dateList
+  pattern <- paste("(", dateList$Date, ")", sep = "", collapse = "|")
+  # Filter ones that match dateList
+  availableData <- availableData %>% filter(download_url != pattern)
+  covidData <- fetch(availableData, patternPostMar22)
+  return(covidData)
 }
