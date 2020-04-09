@@ -99,6 +99,13 @@ getFIPS <- (function() {
   })
 })()
 
+# Get list of all dates
+getDates <- function(covidData) {
+  dateList <- covidData %>% select(Date) %>% unique()
+    mutate(Date = as.character.Date(Date, "%m-%d-%Y"))
+  return(dateList)
+}
+
 # Get list of all counties
 getAllCounties <- function(covidData) {
   result <- covidData %>% group_by(County_FIPS, State_FIPS) %>%
