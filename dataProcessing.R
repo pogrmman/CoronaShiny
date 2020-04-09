@@ -20,6 +20,16 @@ library(tidyr)
 source("./dataFetch.R", encoding = "UTF-8")
 source("./dataCleaning.R", encoding = "UTF-8")
 
+### Functions ###
+getNewData <- function(covidData) {
+  dateList <- getDates(covidData)
+  newData <- getNewPostMar22(dateList) %>% cleanDataPostMar22()
+  counties <- getAllCounties(newData) %>% getPopDensity()
+  newData <- newData %>% merge(counties)
+  covidData <- covidData %>% bind_rows(newData)
+  return(covidData)
+}
+
 ### Data Flow ###
 covidData <- initialFetch() %>% cleanDataPostMar22()
 counties <- getAllCounties(covidData) %>% getPopDensity()
