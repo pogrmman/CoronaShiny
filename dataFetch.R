@@ -34,8 +34,15 @@ listAvailable <- function() {
 # Fetch based on pattern
 fetch <- function(json, pattern) {
   fileList <- json %>% filter(str_detect(name, pattern))
-  covidData <- lapply(fileList$download_url, read.csv) %>% bind_rows()
+  covidData <- lapply(fileList$download_url, read.csv.withFilename) %>% bind_rows()
   return(covidData)
+}
+
+# read.csv but with a column for filename
+read.csv.withFilename <- function(filename) {
+  data <- read.csv(filename)
+  data$Filename <- filename
+  return(data)
 }
 
 # Fetch all data from 3/22/20 forward

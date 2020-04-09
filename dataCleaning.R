@@ -40,33 +40,18 @@ cleanDataPostMar22 <- function(covidData) {
     select(-FIPS) %>%
     # Set unknown counties to NA
     mutate(County_FIPS = ifelse(County_FIPS == "", NA, County_FIPS)) %>%
-    # Separate out date and time
-    separate(Last_Update, into=c("Date", "Time"), sep=" ")
-  
-  # Fix dates in month/day/year format
-  # Matches dates of form [m]m/[d]d/[yy]yy, where year is in 2020s
-  pattern = "[0-1]?[0-9]/[0-3]?[0-9]/(20)?2[0-9]"
-  monthDayYear <- covidData %>% filter(str_detect(Date, pattern)) %>%
-    # Separate date into month, day, and year
-    separate(Date, into = c("Month", "Day", "Year"), sep = "/") %>%
-    # Force year to 4 digits, month to 2 digits, and day to 2 digits
-    mutate(Year = ifelse(str_length(Year) == 2, paste("20", Year, sep = ""), Year)) %>%
-    mutate(Month = ifelse(str_length(Month) == 1, paste("0", Month, sep = ""), Month)) %>%
-    mutate(Day = ifelse(str_length(Day) == 1, paste("0", Day, sep = ""), Day)) %>%
-    # Convert back to year-month-day format
-    unite(Date, Year, Month, Day, sep = "-")
-  
-  # Merge back into original data and convert date column to date
-  covidData <- covidData %>% filter(!str_detect(Date, pattern)) %>%
-    bind_rows(monthDayYear) %>%
-    mutate(Date = as.Date(Date))
+    # Get dates
+    select(-Last_Update) %>%
+    mutate(Date = substr(Filename, nchar(Filename) - 13, nchar(Filename) - 4)) %>%
+    select(-Filename) %>%
+    mutate(Date = as.Date(Date, "%m-%d-%y"))
   
   # Filter out non-US
   covidData <- covidData %>% filter(Country_Region == "US") %>%
     # Rename Admin2 to County, Lat to Latitude, Long_ to Longitude
     rename(County = "Admin2", Latitude = "Lat", Longitude = "Long_") %>%
-    # Drop Active column and Time column
-    select(-Active, -Time) %>%
+    # Drop Active column
+    select(-Active) %>%
     # Filter out cruise ships
     filter(Province_State != "Diamond Princess") %>%
     filter(Province_State != "Grand Princess") %>%
